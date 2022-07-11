@@ -47,5 +47,7 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs permission to save wallpapers.</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3529879658404204~5068012089</string>
 </dict>
 </plist>
