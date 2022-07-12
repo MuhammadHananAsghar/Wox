@@ -1,5 +1,8 @@
 import 'dart:io';
 
+// Banner ID
+// ca-app-pub-3529879658404204/9706913489
+
 class AdHelper {
   static String get bannerAdUnitId {
     if (Platform.isAndroid) {

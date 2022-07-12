@@ -1,12 +1,15 @@
-// ignore_for_file: avoid_print, unnecessary_const
+// ignore_for_file: avoid_print, unnecessary_const, deprecated_member_use
 
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_network_connectivity/flutter_network_connectivity.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:wox/providers/wallpaper_provider.dart';
+import 'package:wox/screens/offline.dart';
 import 'package:wox/utils/saver.dart';
 
 class Wallpaper extends StatefulWidget {
@@ -17,6 +20,28 @@ class Wallpaper extends StatefulWidget {
 }
 
 class _WallpaperState extends State<Wallpaper> {
+  // Internet Connection
+  FlutterNetworkConnectivity flutterNetworkConnectivity =
+      FlutterNetworkConnectivity(
+    isContinousLookUp:
+        true, // optional, false if you cont want continous lookup
+    lookUpDuration: const Duration(
+        seconds: 5), // optional, to override default lookup duration
+    lookUpUrl: 'google.com', // optional, to override default lookup url
+  );
+
+  bool isNetworkConnectedOnCall = false;
+
+  // For Checking Internet Connection
+  _checkConectivity() async {
+    bool connection =
+        await flutterNetworkConnectivity.isInternetConnectionAvailable();
+    setState(() {
+      isNetworkConnectedOnCall = connection;
+    });
+  }
+
+  // Platform Channels
   bool loading = false;
   String textValue = "Download";
   static const platform =
@@ -30,6 +55,26 @@ class _WallpaperState extends State<Wallpaper> {
     } catch (e) {
       print(e);
     }
+  }
+
+  // Full Page Add
+  late InterstitialAd? _interstitialAd;
+  bool _isAddLoaded = false;
+
+  // For Loading Ad
+  void _initAd() {
+    InterstitialAd.load(
+        adUnitId: InterstitialAd.testAdUnitId,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: onAdLoaded,
+          onAdFailedToLoad: (error) {},
+        ));
+  }
+
+  void onAdLoaded(InterstitialAd ad) {
+    _interstitialAd = ad;
+    _isAddLoaded = true;
   }
 
   // Bottom Sheet
@@ -90,22 +135,33 @@ class _WallpaperState extends State<Wallpaper> {
   @override
   void initState() {
     super.initState();
+    _initAd();
     checkAvailable();
   }
 
   // Function to download wallpaper
   downloadFile(String wallURL, String wallID) async {
     if (textValue == "Apply") {
+      // Appling Wallpaper Function Here
       String dirPath = await Saver().getDirectory();
       File file = File('$dirPath/$wallID.jpg');
       _showBottomSheet(file.path.toString());
+      // Showing Add on Click Event
+      if (_isAddLoaded) {
+        _interstitialAd?.show();
+      }
       return;
     }
     setState(() {
       loading = true;
     });
     if (textValue == "Download") {
+      // Downloading Wallpaper
       String downloaded = await Saver().saveFile(wallURL, wallID);
+      // Showing Add on Click Event
+      if (_isAddLoaded) {
+        _interstitialAd?.show();
+      }
       if (downloaded != "false") {
         setState(() {
           loading = false;
@@ -129,120 +185,123 @@ class _WallpaperState extends State<Wallpaper> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      Hero(
-        tag: context.watch<WallpaperProvider>().uniqueID,
-        child: Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          clipBehavior: Clip.hardEdge,
-          margin: const EdgeInsets.only(right: 7),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: CachedNetworkImage(
-            fit: BoxFit.cover,
-            imageUrl: context.watch<WallpaperProvider>().wallpaper,
-            placeholder: (context, url) => Center(
-              child: Text(
-                'wox',
-                style: TextStyle(
-                    fontFamily: 'Euclid',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 33,
-                    color: Colors.grey.withOpacity(0.6),
-                    decoration: TextDecoration.none),
-              ),
-            ),
-            errorWidget: (context, url, error) => Center(
-              child: Text(
-                'error',
-                style: TextStyle(
-                    fontFamily: 'Euclid',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 33,
-                    color: Colors.red.withOpacity(0.8),
-                    decoration: TextDecoration.none),
-              ),
-            ),
-          ),
-        ),
-      ),
-      Positioned(
-        top: 50,
-        left: 20,
-        child: GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: const Icon(
-              Icons.chevron_left,
-              size: 30,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-      ),
-      Positioned(
-        bottom: 50,
-        left: 0,
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width,
-          child: Align(
-            alignment: Alignment.center,
-            child: GestureDetector(
-              onTap: () {
-                var wallURL =
-                    Provider.of<WallpaperProvider>(context, listen: false)
-                        .wallpaper;
-                var wallID =
-                    Provider.of<WallpaperProvider>(context, listen: false)
-                        .wallpaperUUID;
-                downloadFile(wallURL, wallID);
-              },
+    _checkConectivity();
+    return isNetworkConnectedOnCall
+        ? Stack(children: [
+            Hero(
+              tag: context.watch<WallpaperProvider>().uniqueID,
               child: Container(
-                width: 200,
-                height: 50,
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
+                clipBehavior: Clip.hardEdge,
+                margin: const EdgeInsets.only(right: 7),
                 decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(25)),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: !loading
-                      ? Text(
-                          textValue,
-                          style: const TextStyle(
-                              fontSize: 17,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.none,
-                              fontFamily: 'Euclid'),
-                        )
-                      : const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              backgroundColor: Colors.white,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: CachedNetworkImage(
+                  fit: BoxFit.cover,
+                  imageUrl: context.watch<WallpaperProvider>().wallpaper,
+                  placeholder: (context, url) => Center(
+                    child: Text(
+                      'wox',
+                      style: TextStyle(
+                          fontFamily: 'Euclid',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 33,
+                          color: Colors.grey.withOpacity(0.6),
+                          decoration: TextDecoration.none),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Center(
+                    child: Text(
+                      'error',
+                      style: TextStyle(
+                          fontFamily: 'Euclid',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 33,
+                          color: Colors.red.withOpacity(0.8),
+                          decoration: TextDecoration.none),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      )
-    ]);
+            Positioned(
+              top: 50,
+              left: 20,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: const Icon(
+                    Icons.chevron_left,
+                    size: 30,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 50,
+              left: 0,
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Align(
+                  alignment: Alignment.center,
+                  child: GestureDetector(
+                    onTap: () {
+                      var wallURL =
+                          Provider.of<WallpaperProvider>(context, listen: false)
+                              .wallpaper;
+                      var wallID =
+                          Provider.of<WallpaperProvider>(context, listen: false)
+                              .wallpaperUUID;
+                      downloadFile(wallURL, wallID);
+                    },
+                    child: Container(
+                      width: 200,
+                      height: 50,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25)),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: !loading
+                            ? Text(
+                                textValue,
+                                style: const TextStyle(
+                                    fontSize: 17,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                    decoration: TextDecoration.none,
+                                    fontFamily: 'Euclid'),
+                              )
+                            : const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    backgroundColor: Colors.white,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ])
+        : const Offline();
   }
 
   Widget containerChoice(String text, String type, String path) {

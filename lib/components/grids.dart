@@ -1,7 +1,10 @@
+// ignore_for_file: deprecated_member_use, avoid_print
+
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:wox/data/wallpapers_api.dart';
 import 'package:wox/models/wallpapers_model.dart';
@@ -18,6 +21,26 @@ class Grid extends StatefulWidget {
 }
 
 class _GridState extends State<Grid> {
+  // Full Page Add
+  late InterstitialAd? _interstitialAd;
+  bool _isAddLoaded = false;
+
+  // For Loading Ad
+  void _initAd() {
+    InterstitialAd.load(
+        adUnitId: InterstitialAd.testAdUnitId,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: onAdLoaded,
+          onAdFailedToLoad: (error) {},
+        ));
+  }
+
+  void onAdLoaded(InterstitialAd ad) {
+    _interstitialAd = ad;
+    _isAddLoaded = true;
+  }
+
   String idGenerator() {
     final now = DateTime.now();
     return now.microsecondsSinceEpoch.toString();
@@ -56,9 +79,21 @@ class _GridState extends State<Grid> {
         });
   }
 
+  // ignore: unused_local_variable
+  var wallpapers = [];
+
+  _getWallpapers() {
+    String qry = context.watch<SearchQuery>().query;
+    retreiveWallpapers(qry);
+    setState(() {
+      wallpapers = context.watch<WallViewProvider>().queryWallpapers;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _initAd();
     setState(() {
       flag = false;
     });
@@ -66,27 +101,35 @@ class _GridState extends State<Grid> {
 
   @override
   Widget build(BuildContext context) {
-    String qry = context.watch<SearchQuery>().query;
-    // ignore: unused_local_variable
-    var wallpapers = [];
-    retreiveWallpapers(qry);
-    wallpapers = context.watch<WallViewProvider>().queryWallpapers;
+    _getWallpapers();
     return Container(
       child: flag && wallpapers.length - 1 > 0
-          ? GridView.builder(
-              scrollDirection: Axis.vertical,
-              shrinkWrap: true,
-              primary: false,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 200,
-                  childAspectRatio: .6,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10),
-              itemCount: wallpapers.length - 1,
-              itemBuilder: (context, index) {
-                return wallCard(wallpapers[index].image, wallpapers[index].id,
-                    idGenerator());
+          ? NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification notification) {
+                if (notification.metrics.atEdge) {
+                  if (notification.metrics.pixels == 0) {
+                    print('At top');
+                  } else {
+                    print('At bottom');
+                  }
+                }
+                return true;
               },
+              child: GridView.builder(
+                scrollDirection: Axis.vertical,
+                shrinkWrap: true,
+                primary: false,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
+                    childAspectRatio: .6,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10),
+                itemCount: wallpapers.length - 1,
+                itemBuilder: (context, index) {
+                  return wallCard(wallpapers[index].image, wallpapers[index].id,
+                      idGenerator());
+                },
+              ),
             )
           : SizedBox(
               height: MediaQuery.of(context).size.height / 1.5,
@@ -107,6 +150,10 @@ class _GridState extends State<Grid> {
   Widget wallCard(image, wallpaperID, uniqueID) {
     return GestureDetector(
       onTap: () {
+        // Showing Add on Click Event
+        if (_isAddLoaded) {
+          _interstitialAd?.show();
+        }
         context.read<WallpaperProvider>().setWallpaper(image);
         context.read<WallpaperProvider>().setWallpaperUUID(wallpaperID);
         context.read<WallpaperProvider>().setUniqueID(uniqueID);
