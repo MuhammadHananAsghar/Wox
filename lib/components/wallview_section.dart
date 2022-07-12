@@ -105,14 +105,18 @@ class _WallViewState extends State<WallView> {
                             wallpapers[index].id, idGenerator());
                       },
                       scrollDirection: Axis.horizontal)
-                  : Center(
-                      child: Text(
-                        'Loading...',
-                        style: TextStyle(
-                            fontFamily: 'Euclid',
-                            fontSize: 20,
-                            color: Colors.grey.withOpacity(0.7),
-                            fontWeight: FontWeight.bold),
+                  : const Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            backgroundColor: Colors.white,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.black87,
+                            ),
+                          ),
+                        ),
                       ),
                     )),
         ],
@@ -144,16 +148,35 @@ class _WallViewState extends State<WallView> {
                   decoration: BoxDecoration(
                     color: Colors.grey.withOpacity(0.3),
                   ),
-                  child: Center(
-                    child: Text(
-                      'wox',
-                      style: TextStyle(
-                          fontFamily: 'Euclid',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 33,
-                          color: Colors.grey.withOpacity(0.7),
-                          decoration: TextDecoration.none),
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'wox',
+                        style: TextStyle(
+                            fontFamily: 'Euclid',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 33,
+                            color: Colors.grey.withOpacity(0.7),
+                            decoration: TextDecoration.none),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      const SizedBox(
+                        height: 15,
+                        width: 15,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            backgroundColor: Colors.white,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 errorWidget: (context, url, error) => Container(

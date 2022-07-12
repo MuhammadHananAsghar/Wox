@@ -1,5 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_network_connectivity/flutter_network_connectivity.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:wox/components/grids.dart';
 import 'package:wox/providers/search_provider.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +16,33 @@ class Search extends StatefulWidget {
 }
 
 class _SearchState extends State<Search> {
+// BannerAds
+  late BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
+  _initBannerAd() {
+    _bannerAd = BannerAd(
+      size: AdSize.banner,
+      adUnitId: BannerAd.testAdUnitId,
+      listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            setState(() {
+              _isAdLoaded = true;
+            });
+          },
+          onAdFailedToLoad: (ad, error) {}),
+      request: const AdRequest(),
+    );
+
+    _bannerAd?.load();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initBannerAd();
+  }
+
 // Internet Connection
   FlutterNetworkConnectivity flutterNetworkConnectivity =
       FlutterNetworkConnectivity(
@@ -72,6 +102,13 @@ class _SearchState extends State<Search> {
                 ],
               ),
             ))),
+            bottomNavigationBar: _isAdLoaded
+                ? SizedBox(
+                    width: _bannerAd!.size.width.toDouble(),
+                    height: _bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!),
+                  )
+                : const SizedBox(),
           )
         : const Offline();
   }

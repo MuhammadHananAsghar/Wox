@@ -93,7 +93,7 @@ class _GridState extends State<Grid> {
   @override
   void initState() {
     super.initState();
-    _initAd();
+    // _initAd();
     setState(() {
       flag = false;
     });
@@ -104,44 +104,77 @@ class _GridState extends State<Grid> {
     _getWallpapers();
     return Container(
       child: flag && wallpapers.length - 1 > 0
-          ? NotificationListener<ScrollNotification>(
-              onNotification: (ScrollNotification notification) {
-                if (notification.metrics.atEdge) {
-                  if (notification.metrics.pixels == 0) {
-                    print('At top');
-                  } else {
-                    print('At bottom');
-                  }
-                }
-                return true;
-              },
-              child: GridView.builder(
-                scrollDirection: Axis.vertical,
-                shrinkWrap: true,
-                primary: false,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    childAspectRatio: .6,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10),
-                itemCount: wallpapers.length - 1,
-                itemBuilder: (context, index) {
-                  return wallCard(wallpapers[index].image, wallpapers[index].id,
-                      idGenerator());
-                },
-              ),
+          ? Column(
+              children: [
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                    "${wallpapers.length} wallpapers available",
+                    style: TextStyle(
+                        fontSize: 14, color: Colors.black87.withOpacity(0.6)),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                GridView.builder(
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  primary: false,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: .6,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10),
+                  itemCount: wallpapers.length - 1,
+                  itemBuilder: (context, index) {
+                    return wallCard(wallpapers[index].image,
+                        wallpapers[index].id, idGenerator());
+                  },
+                ),
+              ],
             )
           : SizedBox(
               height: MediaQuery.of(context).size.height / 1.5,
               child: Center(
-                child: Text(
-                  notFound ? 'Wallpapers not found.' : 'Loading...',
-                  style: TextStyle(
-                      fontFamily: 'Euclid',
-                      fontSize: 20,
-                      color: Colors.grey.withOpacity(0.7),
-                      fontWeight: FontWeight.bold),
-                ),
+                child: notFound
+                    ? Text(
+                        'Wallpapers not found.',
+                        style: TextStyle(
+                            fontFamily: 'Euclid',
+                            fontSize: 20,
+                            color: Colors.grey.withOpacity(0.7),
+                            fontWeight: FontWeight.bold),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(
+                            height: 30,
+                            width: 30,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                backgroundColor: Colors.white,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.black87,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Text(
+                            'Please wait your internet is slow.',
+                            style: TextStyle(
+                                fontFamily: 'Euclid',
+                                fontSize: 15,
+                                color: Colors.grey.withOpacity(0.7),
+                                fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
               ),
             ),
     );
@@ -151,9 +184,9 @@ class _GridState extends State<Grid> {
     return GestureDetector(
       onTap: () {
         // Showing Add on Click Event
-        if (_isAddLoaded) {
-          _interstitialAd?.show();
-        }
+        // if (_isAddLoaded) {
+        //   _interstitialAd?.show();
+        // }
         context.read<WallpaperProvider>().setWallpaper(image);
         context.read<WallpaperProvider>().setWallpaperUUID(wallpaperID);
         context.read<WallpaperProvider>().setUniqueID(uniqueID);
@@ -177,16 +210,35 @@ class _GridState extends State<Grid> {
               decoration: BoxDecoration(
                 color: Colors.grey.withOpacity(0.3),
               ),
-              child: Center(
-                child: Text(
-                  'wox',
-                  style: TextStyle(
-                      fontFamily: 'Euclid',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 33,
-                      color: Colors.grey.withOpacity(0.7),
-                      decoration: TextDecoration.none),
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'wox',
+                    style: TextStyle(
+                        fontFamily: 'Euclid',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 33,
+                        color: Colors.grey.withOpacity(0.7),
+                        decoration: TextDecoration.none),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  const SizedBox(
+                    height: 15,
+                    width: 15,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.white,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             errorWidget: (context, url, error) => Container(

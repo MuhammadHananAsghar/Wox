@@ -6,7 +6,7 @@ class Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Text(
-      "Backgrounds",
+      "Wallpapers",
       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),
     );
   }

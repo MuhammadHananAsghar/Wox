@@ -85,6 +85,64 @@ class _MainState extends State<Main> {
     });
   }
 
+  // Dialog
+  Future<void> _showMyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Developer & Designer'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Created with Love❤️ by ✨Muhammad Hanan Asghar✨.'),
+                Text('Copyright 2022.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Thanks!'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Dialog
+  Future<void> _showPolicyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Privacy Policy'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('Privacy Policy added soon.'),
+                Text('Copyright 2022.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('I Approve!'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _checkConectivity();
@@ -141,18 +199,22 @@ class _MainState extends State<Main> {
                               _key.currentState!.openDrawer();
                             },
                           ),
-                          InkWell(
-                            child: const Icon(Icons.help_outline),
-                            onTap: () {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                content: Text(
-                                  "Developer: Muhammad Hanan Asghar",
-                                  style: TextStyle(fontFamily: 'Euclid'),
-                                ),
-                                duration: Duration(milliseconds: 1000),
-                              ));
-                            },
+                          Row(
+                            children: [
+                              InkWell(
+                                child: const Icon(Icons.help_outline),
+                                onTap: () {
+                                  _showMyDialog();
+                                },
+                              ),
+                              const SizedBox(width: 10),
+                              InkWell(
+                                child: const Icon(Icons.policy),
+                                onTap: () {
+                                  _showPolicyDialog();
+                                },
+                              ),
+                            ],
                           ),
                         ],
                       ),
